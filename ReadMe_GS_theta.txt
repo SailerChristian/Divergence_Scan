@@ -236,7 +236,7 @@ syntax:
 		genenames (e.g. AL1G10080), one gene per line.
 
 The output of this step can be used in downstream analyses that require metrics per SNP,
-e.g. Sam Yeaman's Null-W.
+e.g. Sam Yeaman's Null-W or Bayenv2
 
 
 

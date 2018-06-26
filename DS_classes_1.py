@@ -4,6 +4,7 @@
 ## updated 24 October 2017, fixed pi and Tajima's D calculation
 ## add removal of all non-variant sites, 2 March 2018
 ## Removed DP column from input data and from this script, keep non-variant sites, and corrected pi and Watterson's theta, 6 June 2018
+## Added flexible input table format
 
 import os, sys, subprocess, statistics, argparse
 from natsort import natsorted
@@ -33,6 +34,7 @@ class G1():
             outputdir = str(args.o+args.coh1+args.coh2)
             if os.path.exists(args.o) == False:
                 os.mkdir(args.o)
+        print('\nSetup ...')
 
         # check if output directory exists, create it if necessary
         if os.path.exists(outputdir) == False:
@@ -46,25 +48,35 @@ class G1():
         for dirName, subdirList, fileList in os.walk(args.i, topdown = False):
             for fname in fileList:
                 if fname.endswith('_raw.table') and args.coh1 in fname:
-                    tincoh1.append(dirName+'/'+fname)
+                    tincoh1.append(dirName+fname)
                 elif fname.endswith('_raw.table') and args.coh2 in fname:
-                    tincoh2.append(dirName+'/'+fname)
+                    tincoh2.append(dirName+fname)
         incoh1 = natsorted(tincoh1)
         incoh2 = natsorted(tincoh2)
+
+        ## test to read header and determine the number of columns for pasting
+        with open(incoh1[0], 'r') as infile:
+            header = infile.readline()
+            head = header.split()
+            ncol = len(head)
+            print('\t'+str(ncol)+' columns in input tables')
+        infile.close()
                                     
         # paste cohort 1 & cohort 2 into a table next to each other & remove CHROM POS from second cohort in joint table
-        # yields: CHROM POS AC AN DP AC AN DP
+        # yields: CHROM POS AC AN AC AN
         print('\nSTEP 1: Paste contrast AC tables\n')
         for i in range(len(incoh1)):
             print('\tProcessing '+incoh1[i])
             pastecmd = open('paste_'+args.coh1+'_'+args.coh2+'.unix', 'w')
             pastecmd.write('paste ')
-            pastecmd.write(incoh1[i]+' '+incoh2[i]+' | cut -f -4,7,8 ')
-            pastecmd.write('> '+outputdir+'/'+contrast+'_scaf_'+str(i+1)+'_temp.table')
+            pastecmd.write(incoh1[i]+' '+incoh2[i]+' | cut -f -'+str(ncol))
+            for j in range(3,ncol+1):
+                pastecmd.write(','+str(ncol*2-(ncol-j)))
+            pastecmd.write(' > '+outputdir+'/'+contrast+'_scaf_'+str(i+1)+'_temp.table')
             pastecmd.close()
 
             # run in unix
-            cmd = (open('paste_'+args.coh1+'_'+args.coh2+'.unix', 'r'))
+            cmd = open('paste_'+args.coh1+'_'+args.coh2+'.unix', 'r')
             p = subprocess.Popen(cmd, shell=True)
             sts = os.waitpid(p.pid, 0)[1]
 
