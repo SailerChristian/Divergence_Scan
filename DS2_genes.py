@@ -151,20 +151,32 @@ print('\tFound '+str(len(a))+' genelists to select genes:')
 count = 0
 for file in a_sorted:
     print('\t Processing '+str(file))
+    with open(outputdir+file, 'r') as original:
+        data = original.read()
+    with open(outputdir+file, 'w') as modified:
+        modified.write('AL_ID\n'+data)
     basename = file.replace(args.suf+'.txt', '')
-    with open(outputdir+basename+args.suf+'_GF.txt', 'w') as outfile:
-        outfile.write('AL_ID\tAT_ID\tGeneID\tOrthoGroup\tsymbol\tlocus_type\tnote\tfull_name\tdescription\tcurator_summary\tcomputational_description \tcontrast\n')
-        query = open(outputdir+file, 'r')
-        for tline in query:
-            line = tline.replace('\n', '')
-            test = open(args.gf, 'r')
-            for testline in test:
-                ptestline = testline.replace('\n', '')
-                data = testline.split('\t')
-                if line in data[0]:
-                    outfile.write(ptestline+'\t'+contrast+'\n')
-    query.close()
-    outfile.close()
+    query = pd.read_table(outputdir+file)
+    test = pd.read_table(args.gf)
+    # merge tables as left join (left=AL_ID gene list)
+    inner = query.merge(test, how='left')
+    # add contrast column
+    inner['contrast'] = contrast
+    inner.to_csv(outputdir+basename+args.suf+'_GF.txt', sep='\t', index=False)
+        # # flexible header, takes header from input file
+        # theader = test.readline()
+        # header = theader.replace('\n', '')
+        # outfile.write(header+'\tcontrast\n') # add one extra column
+    #     for tline in query:
+    #         line = tline.replace('\n', '')
+    #         test = open(args.gf, 'r')
+    #         for testline in test:
+    #             ptestline = testline.replace('\n', '')
+    #             data = testline.split('\t')
+    #             if line in data[0]:
+    #                 outfile.write(ptestline+'\t'+contrast+'\n')
+    # query.close()
+    # outfile.close()
     count +=1
 
 print('\nObtained Arabidopsis thaliana ortholog gene function for '+str(count)+' outlier gene lists\n')

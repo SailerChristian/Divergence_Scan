@@ -33,7 +33,7 @@ class G_NullW():
 		logdir = args.o+args.coh1+args.coh2+'/process_log/'
 		self.logdir = logdir
 
-		print('\nSTEP 1: Obtain and subset WG AC table\n')
+		print('\nSTEP 1: Obtain and subset WG AC table to candidate gene intervals\n')
 
 		# Obtain concatenated AC table from outlier scan, a product of G1_outliers.py, variant sites only
 		ac = []
@@ -72,45 +72,55 @@ class G_NullW():
 					ac_bed.append(file)
 		ac_bed_sorted = natsorted(ac_bed)
 
-		for table in ac_bed_sorted:
-			print('\n\tSubset '+table+' with '+args.genes)
-			basename = table.replace('_AC'+args.suf+'.bed', '')
-			bedcmd = open(outputdir+'bed_intersect.unix', 'w')
-			bedcmd.write('bedtools intersect -a '+outputdir+table+' -b '+args.genes+' -u ') # -u reports each overlap of a in b only once
-			bedcmd.write('> '+outputdir+basename+'_refined_AC'+args.suf+'.table') # no gene name in file 
-			bedcmd.close()
+		# find all candidate gene intervals
+		cand_bed = []
+		cand_bed_path = []
+		for dirName, subdirList, fileList in os.walk(args.i+contrast+'/genes/'):
+			for file in fileList:
+				if file.endswith('_intervals'+args.suf+'.bed') and args.outlier in file:
+					cand_bed.append(file)
+					cand_bed_path.append(dirName+file)
 
-			# execute in unix
-			cmd = (open(outputdir+'bed_intersect.unix', 'r'))
-			p = subprocess.Popen(cmd, shell=True)
-			sts = os.waitpid(p.pid, 0)[1]
+		for file in cand_bed_path:
+			for table in ac_bed_sorted:
+				print('\n\tSubset '+table+' with '+file)
+				basename = table.replace('_AC'+args.suf+'.bed', '')
+				bedcmd = open(outputdir+'bed_intersect.unix', 'w')
+				bedcmd.write('bedtools intersect -a '+outputdir+table+' -b '+file+' -u ') # -u reports each overlap of a in b only once
+				bedcmd.write('> '+outputdir+basename+'_'+args.outlier+'_refined_AC'+args.suf+'.table') # no gene name in file 
+				bedcmd.close()
 
-			print('\t'+file+' subsetted to '+basename+'_refined_AC'+args.suf+'.table')
+				# execute in unix
+				cmd = (open(outputdir+'bed_intersect.unix', 'r'))
+				p = subprocess.Popen(cmd, shell=True)
+				sts = os.waitpid(p.pid, 0)[1]
 
-			# Obtain gene start, end, length, name from interval bedfile of GS2
-			bedgene = open(outputdir+'bed_gene.unix', 'w')
-			bedgene.write(""" awk '{FS="\t"; OFS="\t"; print $5, $1, $2, $3, $3-$2}' """)
-			bedgene.write(args.genes+ '> '+outputdir+'/temp_'+basename+'_gene_interval.txt')
-			bedgene.close()
+				print('\t'+file+' subsetted to '+basename+'_'+args.outlier+'_refined_AC'+args.suf+'.table')
 
-			# execute in unix
-			cmd = open(outputdir+'bed_gene.unix', 'r')
-			p = subprocess.Popen(cmd, shell=True)
-			sts = os.waitpid(p.pid,0)[1]
+				# Obtain gene start, end, length, name from interval bedfile of GS2
+				bedgene = open(outputdir+'bed_gene.unix', 'w')
+				bedgene.write(""" awk '{FS="\t"; OFS="\t"; print $5, $1, $2, $3, $3-$2}' """)
+				bedgene.write(file+ '> '+outputdir+'/temp_'+basename+'_gene_interval.txt')
+				bedgene.close()
 
-			# remove temorary files
-			os.remove(outputdir+'bed_intersect.unix')
-			os.remove(outputdir+'bed_gene.unix')
+				# execute in unix
+				cmd = open(outputdir+'bed_gene.unix', 'r')
+				p = subprocess.Popen(cmd, shell=True)
+				sts = os.waitpid(p.pid,0)[1]
 
-			# add header to bed file, necessary for pasting
-			with open(outputdir+basename+'_gene_interval.txt', 'w') as outfile:
-				header = 'gene\tscaffold\tstart\tend\tgene_length\n'
-				outfile.write(header)
-				with open(outputdir+'/temp_'+basename+'_gene_interval.txt') as infile:
-					for line in infile:
-						outfile.write(line)
-			os.remove(outputdir+'/temp_'+basename+'_gene_interval.txt')
+				# remove temorary files
+				os.remove(outputdir+'bed_intersect.unix')
+				os.remove(outputdir+'bed_gene.unix')
 
+				# add header to bed file, necessary for pasting
+				with open(outputdir+basename+'_'+args.outlier+'_gene_interval.txt', 'w') as outfile:
+					header = 'gene\tscaffold\tstart\tend\tgene_length\n'
+					outfile.write(header)
+					with open(outputdir+'/temp_'+basename+'_gene_interval.txt') as infile:
+						for line in infile:
+							outfile.write(line)
+				os.remove(outputdir+'/temp_'+basename+'_gene_interval.txt')
+				
 
 	def metric_calculation_gene(self, infile, outfile, winexclcount, file_count, win_count):
 		args = self.args
@@ -181,6 +191,7 @@ class G_NullW():
 		contrast = args.coh1+args.coh2
 		self.outputdir = outputdir
 		self.contrast = contrast
+		# self.outlier = outlier
 
 		print('\nSTEP 2: Calculate Fst per SNP\n')
 		bname = contrast+'_WG'
@@ -304,7 +315,7 @@ class G_NullW():
 				print('\n\tSubset '+table+' with '+cand)
 				bedcmd = open(outputdir+'bed_intersect.unix', 'w')
 				bedcmd.write('bedtools intersect -a '+table+' -b '+cand)
-				bedcmd.write('> '+outputdir+bname+'_'+args.outlier+'_OS_SNPs_temp'+args.suf+'.txt')  
+				bedcmd.write('> '+outputdir+bname+'_'+args.outlier+'_DS_SNPs_temp'+args.suf+'.txt')  
 				bedcmd.close()
 
 				# execute in unix
@@ -314,9 +325,9 @@ class G_NullW():
 
 		os.remove(outputdir+'bed_intersect.unix')
 
-		with open(outputdir+bname+'_'+args.outlier+'_OS_SNPs'+args.suf+'.bed', 'w') as outfile:
+		with open(outputdir+bname+'_'+args.outlier+'_DS_SNPs'+args.suf+'.bed', 'w') as outfile:
 			count_sel = 0
-			with open(outputdir+bname+'_'+args.outlier+'_OS_SNPs_temp'+args.suf+'.txt', 'r') as infile:
+			with open(outputdir+bname+'_'+args.outlier+'_DS_SNPs_temp'+args.suf+'.txt', 'r') as infile:
 				for line in infile:
 					data = line.split(sep='\t')
 					outfile.write(data[0]+'\t'+data[1]+'\t'+data[2]+'\n')
@@ -328,9 +339,9 @@ class G_NullW():
 		
 		# read and write file again to add header
 		header = 'scaffold\tstart\tposition\t'+args.coh1+'_freq\t'+args.coh2+'_freq\tabsdiff\t'+args.coh1+'_'+args.coh2+'\t'+args.coh2+'_'+args.coh1+'\tFst_2C\tFst_4C\tDxy\n'
-		with open(outputdir+bname+'_'+args.outlier+'_OS_SNPs'+args.suf+'.txt', 'w') as outfile:
+		with open(outputdir+bname+'_'+args.outlier+'_DS_SNPs'+args.suf+'.txt', 'w') as outfile:
 			outfile.write(header)
-			with open(outputdir+bname+'_'+args.outlier+'_OS_SNPs_temp'+args.suf+'.txt', 'r') as infile:
+			with open(outputdir+bname+'_'+args.outlier+'_DS_SNPs_temp'+args.suf+'.txt', 'r') as infile:
 				for line in infile:
 					outfile.write(line)
 		infile.close()
@@ -364,7 +375,7 @@ class G_NullW():
 		#  get SNP intervals from previous step3_NullW()
 		for dirName, subdirList, fileList in os.walk(outputdir):
 			for file in fileList:
-				if file.endswith('_OS_SNPs_temp'+args.suf+'.txt'):
+				if file.endswith('_DS_SNPs_temp'+args.suf+'.txt'):
 					genes_in_path.append(dirName+file)
 					genes_in.append(file)
 
@@ -377,7 +388,7 @@ class G_NullW():
 						ann = line.split(sep="\t")
 						outfile.write(ann[0]+'\t'+str(int(ann[1])-1)+'\t'+ann[1]+'\t'+ann[2]+'\t'+ann[3]+'\t'+ann[4]+'\t'+
 							ann[5]+'\t'+ann[6]+'\t'+ann[7]+'\t'+ann[8]+'\t'+ann[9]+'\t'+ann[10]+'\t'+ann[11]+'\t'+
-							ann[12]+'\t'+ann[13]+'\n')
+							ann[12]+'\t'+ann[13])
 				outfile.close()
 			infile.close()
 
@@ -397,7 +408,7 @@ class G_NullW():
 
 				print('\t'+vcf+' subsetted to '+basename+'_SNPeff_temp'+args.suf+'.txt')
 
-		# os.remove(outputdir+'bed_intersect.unix')
+		os.remove(outputdir+'bed_intersect.unix')
 
 		with open(outputdir+basename+'_SNPeff_temp'+args.suf+'.txt', 'r') as infile:
 			with open(outputdir+basename+'_SNPeff'+args.suf+'.txt', 'w') as outfile:
@@ -409,7 +420,7 @@ class G_NullW():
 			outfile.close()
 		infile.close()
 
-		# os.remove(outputdir+'temp_ann'+args.suf+'.txt')
+		os.remove(outputdir+'temp_ann'+args.suf+'.txt')
 
 	def step1to4(self):
 		self.step1_nullW()
