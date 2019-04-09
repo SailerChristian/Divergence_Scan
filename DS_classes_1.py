@@ -5,6 +5,7 @@
 ## add removal of all non-variant sites, 2 March 2018
 ## Removed DP column from input data and from this script, keep non-variant sites, and corrected pi and Watterson's theta, 6 June 2018
 ## Added flexible input table format
+## Updated 9 April 2019
 
 import os, sys, subprocess, statistics, argparse
 from natsort import natsorted
@@ -248,10 +249,13 @@ class G1():
             scaffold, position, AC_1, AN_1, AC_2, AN_2, variant = data.split()
             scaf.append(scaffold)
             pos.append(int(position))
+            # count if site is variable (not the same base in every sequence)
             if int(AC_1) > 0 and int(AC_1) != int(AN_1):
                 num_snps_1 += 1
             if int(AC_2) > 0 and int(AC_2) != int(AN_2):
                 num_snps_2 += 1
+
+            # summary stats
             allele_c1_count = int(AC_1)
             allele_c2_count = int(AC_2)
             allele_c1_freq = allele_c1_count/int(AN_1)
@@ -263,16 +267,19 @@ class G1():
             c1_minus_c2.append(allele_c1_freq - allele_c2_freq)
             c2_minus_c1.append(allele_c2_freq - allele_c1_freq)
             absdiff.append(abs(allele_c1_freq-allele_c2_freq))
+            # Calcuate theta pi based on heterozygosity
             theta_pi1.append((2*allele_c1_count*(int(AN_1)-allele_c1_count))/(int(AN_1)*(int(AN_1)-1)))    
             theta_pi2.append((2*allele_c2_count*(int(AN_2)-allele_c2_count))/(int(AN_2)*(int(AN_2)-1)))
-            theta_h1.append((2*allele_c1_count*allele_c1_count)/(int(AN_1)*(int(AN_1)-1)))
-            theta_h2.append((2*allele_c2_count*allele_c2_count)/(int(AN_2)*(int(AN_2)-1)))            
+            # theta_h1.append((2*allele_c1_count*allele_c1_count)/(int(AN_1)*(int(AN_1)-1)))
+            # theta_h2.append((2*allele_c2_count*allele_c2_count)/(int(AN_2)*(int(AN_2)-1)))
+            # harmonic number for Watterson's theta           
             for j in range((int(AN_1)-1)):
-                temp1.append(1/(j+1))
+                temp1.append(1/(j+1)) # correct for the number of positions we calcluated this for, '+1', because the index is 0-based
             sum_rec_1 = sum(temp1)
             for k in range((int(AN_2)-1)):
                 temp2.append(1/(k+1))
             sum_rec_2 = sum(temp2)
+
             try:
                 ht = 2*allele_freq*(1-allele_freq)
                 h1 = 2*allele_c1_freq*(1-allele_c1_freq)
@@ -314,8 +321,8 @@ class G1():
         pi2 = sum(theta_pi2)/len(pos)
         theta_w1 = num_snps_1/a1
         theta_w2 = num_snps_2/a2
-        sum_theta_h1 = sum(theta_h1)
-        sum_theta_h2 = sum(theta_h2)
+        # sum_theta_h1 = sum(theta_h1)
+        # sum_theta_h2 = sum(theta_h2)
         mean_fst = statistics.mean(fst)
         mean_fst_4C = statistics.mean(fst_4C)
         sum_dxy = sum(dxy)
@@ -344,8 +351,8 @@ class G1():
                           str(sum_theta_pi2)+'\t'+
                           str(theta_w1)+'\t'+
                           str(theta_w2)+'\t'+
-                          str(sum_theta_h1)+'\t'+
-                          str(sum_theta_h2)+'\t'+
+                          # str(sum_theta_h1)+'\t'+
+                          # str(sum_theta_h2)+'\t'+
                           str(mean_fst)+'\t'+
                           str(mean_fst_4C)+'\t'+
                           str(win_dxy)+'\n')
@@ -368,7 +375,7 @@ class G1():
         self.outputdir = outputdir
         self.contrast = contrast
         print('\nSTEP 4: Calculate Dxy, Fst, DD')
-        header = 'scaffold\tstart\tend\tmidpoint\tlength_bp\tnum_sites\tS_'+args.coh1+'\tS_'+args.coh2+'\tvariant_sites\t'+args.coh1+'_freq\t'+args.coh2+'_freq\tabsdiff\t'+args.coh1+'_'+args.coh2+'\t'+args.coh2+'_'+args.coh1+'\tvaru\t'+args.coh1+'_pi\t'+args.coh2+'_pi\t'+args.coh1+'_thetaPi\t'+args.coh2+'_thetaPi\t'+args.coh1+'_thetaw\t'+args.coh2+'_thetaw\t'+args.coh1+'_thetah\t'+args.coh2+'_thetah\tFst\tFst_4C\tDxy\n'
+        header = 'scaffold\tstart\tend\tmidpoint\tlength_bp\tnum_sites\tS_'+args.coh1+'\tS_'+args.coh2+'\tvariant_sites\t'+args.coh1+'_freq\t'+args.coh2+'_freq\tabsdiff\t'+args.coh1+'_'+args.coh2+'\t'+args.coh2+'_'+args.coh1+'\tvaru\t'+args.coh1+'_pi\t'+args.coh2+'_pi\t'+args.coh1+'_thetaPi\t'+args.coh2+'_thetaPi\t'+args.coh1+'_thetaw\t'+args.coh2+'_thetaw\tFst\tFst_4C\tDxy\n'
         with open(outputdir+'/'+contrast+'_metrics_WG_'+str(args.snps)+'SNPs'+args.suf+'.txt','w') as outfile:
             outfile.write(header)
 
@@ -490,29 +497,29 @@ class G1():
             snp_file['cor_prediction'] = cor_intercept + (cor_slope*snp_file.absdiff)
             snp_file['DD'] = snp_file[args.coh1+'_pi'] - snp_file.cor_prediction
 
-        # calculate Tajima's D
-            delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetaw']
-            delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetaw']
-            snp_file['tajimas_D_'+args.coh1] = delta1/statistics.stdev(delta1)
-            snp_file['tajimas_D_'+args.coh2] = delta2/statistics.stdev(delta2)
+        # # calculate Tajima's D
+        #     delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetaw']
+        #     delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetaw']
+        #     snp_file['tajimas_D_'+args.coh1] = delta1/statistics.stdev(delta1)
+        #     snp_file['tajimas_D_'+args.coh2] = delta2/statistics.stdev(delta2)
 
-            snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
+        #     snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
             
-            # count += 1
+        #     # count += 1
             
-        # calculate Fai and Wu's H
-            delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetah']
-            delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetah']
-            snp_file['faiwus_H_'+args.coh1] = delta1/statistics.stdev(delta1)
-            snp_file['faiwus_H_'+args.coh2] = delta2/statistics.stdev(delta2)
+        # # calculate Fai and Wu's H
+        #     delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetah']
+        #     delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetah']
+        #     snp_file['faiwus_H_'+args.coh1] = delta1/statistics.stdev(delta1)
+        #     snp_file['faiwus_H_'+args.coh2] = delta2/statistics.stdev(delta2)
 
-            snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
+        #     snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
             
             count += 1
         
         print('Processed '+str(count)+' files for DDresiduals')
-        print('Processed '+str(count)+' files for Tajimas D')
-        print('Processed '+str(count)+' files for Fai and Wus H')
+        # print('Processed '+str(count)+' files for Tajimas D')
+        # print('Processed '+str(count)+' files for Fai and Wus H')
         os.remove(outputdir+'/'+contrast+'_metrics_WG_'+str(args.snps)+'SNPs'+args.suf+'.txt')
 
 
@@ -562,14 +569,14 @@ class G1():
                 dd = []
                 tajD_c1 = []
                 tajD_c2 = []
-                tajH_c1 = []
-                tajH_c2 = []
+                # tajH_c1 = []
+                # tajH_c2 = []
                 faiwuH_c1 = []
                 faiwuH_c2 = []
                 wlength = []
                 
                 for line in infile:
-                    scaffold, start, end, midpoint, length, num_sites, S_coh1, S_coh2, num_SNPs, coh1_freq, coh2_freq, absdiff, coh1_coh2, coh2_coh1, varu, coh1_pi, coh2_pi, coh1_thetaPi, coh2_thetaPi, coh1_thetaw, coh2_thetaw, coh1_thetah, coh2_thetah, Fst, Fst_4C, Dxy, prediction, cor_prediction, DD, tajimas_D_coh1, tajimas_D_coh2, faiwus_H_coh1, faiwus_H_coh2 = line.split()
+                    scaffold, start, end, midpoint, length, num_sites, S_coh1, S_coh2, num_SNPs, coh1_freq, coh2_freq, absdiff, coh1_coh2, coh2_coh1, varu, coh1_pi, coh2_pi, coh1_thetaPi, coh2_thetaPi, coh1_thetaw, coh2_thetaw, Fst, Fst_4C, Dxy, prediction, cor_prediction, DD = line.split()
                     absafd.append(float(absdiff))
                     afd_c1_c2.append(float(coh1_coh2))
                     afd_c2_c1.append(float(coh2_coh1))
@@ -577,17 +584,17 @@ class G1():
                     pi_c2.append(float(coh2_pi))
                     thetaw_c1.append(float(coh1_thetaw))
                     thetaw_c2.append(float(coh2_thetaw))
-                    thetah_c1.append(float(coh1_thetah))
-                    thetah_c2.append(float(coh2_thetah))
+                    # thetah_c1.append(float(coh1_thetah))
+                    # thetah_c2.append(float(coh2_thetah))
                     dxy.append(float(Dxy))
                     fst.append(float(Fst))
                     fst_4C.append(float(Fst_4C))
                     dd.append(float(DD))
                     wlength.append(int(length))
-                    tajD_c1.append(float(tajimas_D_coh1))
-                    tajD_c2.append(float(tajimas_D_coh2))
-                    faiwuH_c1.append(float(faiwus_H_coh1))
-                    faiwuH_c2.append(float(faiwus_H_coh2))
+                    # tajD_c1.append(float(tajimas_D_coh1))
+                    # tajD_c2.append(float(tajimas_D_coh2))
+                    # faiwuH_c1.append(float(faiwus_H_coh1))
+                    # faiwuH_c2.append(float(faiwus_H_coh2))
 
                 mean_afd = statistics.mean(afd_c1_c2)
                 median_afd = statistics.mean(afd_c1_c2)
