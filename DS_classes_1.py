@@ -49,9 +49,9 @@ class G1():
         for dirName, subdirList, fileList in os.walk(args.i, topdown = False):
             for fname in fileList:
                 if fname.endswith('_raw.table') and args.coh1 in fname:
-                    tincoh1.append(dirName+fname)
+                    tincoh1.append(dirName+'/'+fname)
                 elif fname.endswith('_raw.table') and args.coh2 in fname:
-                    tincoh2.append(dirName+fname)
+                    tincoh2.append(dirName+'/'+fname)
         incoh1 = natsorted(tincoh1)
         incoh2 = natsorted(tincoh2)
 
@@ -497,23 +497,8 @@ class G1():
             snp_file['cor_prediction'] = cor_intercept + (cor_slope*snp_file.absdiff)
             snp_file['DD'] = snp_file[args.coh1+'_pi'] - snp_file.cor_prediction
 
-        # # calculate Tajima's D
-        #     delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetaw']
-        #     delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetaw']
-        #     snp_file['tajimas_D_'+args.coh1] = delta1/statistics.stdev(delta1)
-        #     snp_file['tajimas_D_'+args.coh2] = delta2/statistics.stdev(delta2)
-
-        #     snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
-            
-        #     # count += 1
-            
-        # # calculate Fai and Wu's H
-        #     delta1 = snp_file[args.coh1+'_thetaPi']-snp_file[args.coh1+'_thetah']
-        #     delta2 = snp_file[args.coh2+'_thetaPi']-snp_file[args.coh2+'_thetah']
-        #     snp_file['faiwus_H_'+args.coh1] = delta1/statistics.stdev(delta1)
-        #     snp_file['faiwus_H_'+args.coh2] = delta2/statistics.stdev(delta2)
-
-        #     snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
+            # export file
+            snp_file.to_csv(outputdir+'/'+contrast+'_WG_'+str(args.snps)+'SNPs_3metrics'+args.suf+'.txt',sep="\t", index=False)
             
             count += 1
         
@@ -567,12 +552,12 @@ class G1():
                 fst = []
                 fst_4C = []
                 dd = []
-                tajD_c1 = []
-                tajD_c2 = []
+                # tajD_c1 = []
+                # tajD_c2 = []
                 # tajH_c1 = []
                 # tajH_c2 = []
-                faiwuH_c1 = []
-                faiwuH_c2 = []
+                # faiwuH_c1 = []
+                # faiwuH_c2 = []
                 wlength = []
                 
                 for line in infile:
@@ -633,37 +618,37 @@ class G1():
                 sd_win = statistics.stdev(wlength)
                 CV_win = sd_win/mean_win
                 out_win = np.percentile(wlength, (100-args.cut))
-                mean_tajd1 = statistics.mean(tajD_c1)
-                median_tajd1 = statistics.median(tajD_c1)
-                sd_tajd1 = statistics.stdev(tajD_c1)
-                CV_tajd1 = sd_tajd1/mean_tajd1
-                out_tajd1 = np.percentile(tajD_c1, (100-args.cut))
-                mean_tajd2 = statistics.mean(tajD_c2)
-                median_tajd2 = statistics.median(tajD_c2)
-                sd_tajd2 = statistics.stdev(tajD_c2)
-                CV_tajd2 = sd_tajd2/mean_tajd2
-                out_tajd2 = np.percentile(tajD_c2, (100-args.cut))
-                mean_faiwu1 = statistics.mean(faiwuH_c1)
-                median_faiwu1 = statistics.median(faiwuH_c1)
-                sd_faiwu1 = statistics.stdev(faiwuH_c1)
-                CV_faiwu1 = sd_faiwu1/mean_faiwu1
-                out_faiwu1 = np.percentile(faiwuH_c1, (100-args.cut))
-                mean_faiwu2 = statistics.mean(faiwuH_c2)
-                median_faiwu2 = statistics.median(faiwuH_c2)
-                sd_faiwu2 = statistics.stdev(faiwuH_c2)
-                CV_faiwu2 = sd_faiwu2/mean_faiwu2
-                out_faiwu2 = np.percentile(faiwuH_c2, (100-args.cut))
+                # mean_tajd1 = statistics.mean(tajD_c1)
+                # median_tajd1 = statistics.median(tajD_c1)
+                # sd_tajd1 = statistics.stdev(tajD_c1)
+                # CV_tajd1 = sd_tajd1/mean_tajd1
+                # out_tajd1 = np.percentile(tajD_c1, (100-args.cut))
+                # mean_tajd2 = statistics.mean(tajD_c2)
+                # median_tajd2 = statistics.median(tajD_c2)
+                # sd_tajd2 = statistics.stdev(tajD_c2)
+                # CV_tajd2 = sd_tajd2/mean_tajd2
+                # out_tajd2 = np.percentile(tajD_c2, (100-args.cut))
+                # mean_faiwu1 = statistics.mean(faiwuH_c1)
+                # median_faiwu1 = statistics.median(faiwuH_c1)
+                # sd_faiwu1 = statistics.stdev(faiwuH_c1)
+                # CV_faiwu1 = sd_faiwu1/mean_faiwu1
+                # out_faiwu1 = np.percentile(faiwuH_c1, (100-args.cut))
+                # mean_faiwu2 = statistics.mean(faiwuH_c2)
+                # median_faiwu2 = statistics.median(faiwuH_c2)
+                # sd_faiwu2 = statistics.stdev(faiwuH_c2)
+                # CV_faiwu2 = sd_faiwu2/mean_faiwu2
+                # out_faiwu2 = np.percentile(faiwuH_c2, (100-args.cut))
 
                 outlier_values = open(outputdir+'/'+contrast+'_'+str(args.snps)+'SNPs_'+str(int(10000*args.cut))+'ppm_descriptive_stats'+args.suf+'.txt', 'w')
-                outlier_values.write('stat\tAbsDiff\tAFD_1_2\tDxy\tFst\tFst_4C\tDD\twin_length\tTajD_'+args.coh1+'\tTajD_'+args.coh2+'\tFaiWusH_'+args.coh1+'\tFaiWusH_'+args.coh2+'\n'+
-                                     'min\t'+str(round(min(absafd),4))+'\t'+str(round(min(afd_c1_c2),4))+'\t'+str(round(min(dxy),4))+'\t'+str(round(min(fst),4))+'\t'+str(round(min(fst_4C),4))+'\t'+str(round(min(dd),4))+'\t'+str(round(min(wlength),0))+'\t'+str(round(min(tajD_c1),4))+'\t'+str(round(min(tajD_c2),4))+'\t'+str(round(min(faiwuH_c1),4))+'\t'+str(round(min(faiwuH_c2),4))+'\n'+
-                                     'mean\t'+str(round(mean_abs,4))+'\t'+str(round(mean_afd,4))+'\t'+str(round(mean_Dxy,4))+'\t'+str(round(mean_Fst,4))+'\t'+str(round(mean_Fst_4C,4))+'\t'+str(round(mean_DD,4))+'\t'+str(round(mean_win,0))+'\t'+str(round(mean_tajd1,4))+'\t'+str(round(mean_tajd2,0))+'\t'+str(round(mean_faiwu1,4))+'\t'+str(round(mean_faiwu2,0))+'\n'+
-                                     'median\t'+str(round(median_abs,4))+'\t'+str(round(median_afd,4))+'\t'+str(round(median_Dxy,4))+'\t'+str(round(median_Fst,4))+'\t'+str(round(median_Fst_4C,4))+'\t'+str(round(median_DD,4))+'\t'+str(round(median_win,0))+'\t'+str(round(median_tajd1,4))+'\t'+str(round(median_tajd2,0))+'\t'+str(round(median_faiwu1,4))+'\t'+str(round(median_faiwu2,0))+'\n'+
-                                     'sd\t'+str(round(sd_abs,4))+'\t'+str(round(sd_afd,4))+'\t'+str(round(sd_Dxy,4))+'\t'+str(round(sd_Fst,4))+'\t'+str(round(sd_Fst_4C,4))+'\t'+str(round(sd_DD,4))+'\t'+str(round(sd_win,0))+'\t'+str(round(sd_tajd1,4))+'\t'+str(round(sd_tajd2,0))+'\t'+str(round(sd_faiwu1,4))+'\t'+str(round(sd_faiwu2,0))+'\n'+
-                                     'CV\t'+str(round(CV_abs,4))+'\t'+str(round(CV_afd,4))+'\t'+str(round(CV_Dxy,4))+'\t'+str(round(CV_Fst,4))+'\t'+str(round(CV_Fst_4C,4))+'\t'+str(round(CV_DD,4))+'\t'+str(round(CV_win,0))+'\t'+str(round(CV_tajd1,4))+'\t'+str(round(CV_tajd2,0))+'\t'+str(round(CV_faiwu1,4))+'\t'+str(round(CV_faiwu2,0))+'\n'+
-                                     'max\t'+str(round(max(absafd),4))+'\t'+str(round(max(afd_c1_c2),4))+'\t'+str(round(max(dxy),4))+'\t'+str(round(max(fst),4))+'\t'+str(round(max(fst_4C),4))+'\t'+str(round(max(dd),4))+'\t'+str(round(max(wlength),0))+'\t'+str(round(max(tajD_c1),4))+'\t'+str(round(max(tajD_c2),0))+'\t'+str(round(max(faiwuH_c1),4))+'\t'+str(round(max(faiwuH_c2),0))+'\n'+
-                                     'Cutoff\t'+str(round(out_abs_up,4))+'\t'+str(round(out_afd_up,4))+'\t'+str(round(out_dxy,4))+'\t'+str(round(out_fst,4))+'\t'+str(round(out_fst_4C,4))+'\t'+str(round(out_dd,4))+'\t'+str(round(out_win,0))+'\t'+str(round(out_tajd1,4))+'\t'+str(round(out_tajd2,0))+'\t'+str(round(out_faiwu1,4))+'\t'+str(round(out_faiwu2,0))+'\n'+
-                                     'Cutoff2\t'+str(round(out_abs_low,4))+'\t'+str(round(out_afd_low,4))+'\t'+str(round(out_dxy,4))+'\t'+str(round(out_fst,4))+'\t'+str(round(out_fst_4C,4))+'\t'+str(round(out_dd,4))+'\t'+str(round(out_win,0))+'\t'+str(round(out_tajd1,4))+'\t'+str(round(out_tajd2,0))+'\t'+str(round(out_faiwu1,4))+'\t'+str(round(out_faiwu2,0))+'\n')
+                outlier_values.write('stat\tAbsDiff\tAFD_1_2\tDxy\tFst\tFst_4C\tDD\twin_length\tTajD_'+args.coh1+'\n'+#TajD_'+args.coh2+'\tFaiWusH_'+args.coh1+'\tFaiWusH_'+args.coh2+'\n'+
+                                     'min\t'+str(round(min(absafd),4))+'\t'+str(round(min(afd_c1_c2),4))+'\t'+str(round(min(dxy),4))+'\t'+str(round(min(fst),4))+'\t'+str(round(min(fst_4C),4))+'\t'+str(round(min(dd),4))+'\t'+str(round(min(wlength),0))+'\n'+#str(round(min(tajD_c1),4))+'\t'+str(round(min(tajD_c2),4))+'\t'+str(round(min(faiwuH_c1),4))+'\t'+str(round(min(faiwuH_c2),4))+'\n'+
+                                     'mean\t'+str(round(mean_abs,4))+'\t'+str(round(mean_afd,4))+'\t'+str(round(mean_Dxy,4))+'\t'+str(round(mean_Fst,4))+'\t'+str(round(mean_Fst_4C,4))+'\t'+str(round(mean_DD,4))+'\t'+str(round(mean_win,0))+'\n'+#str(round(mean_tajd1,4))+'\t'+str(round(mean_tajd2,0))+'\t'+str(round(mean_faiwu1,4))+'\t'+str(round(mean_faiwu2,0))+'\n'+
+                                     'median\t'+str(round(median_abs,4))+'\t'+str(round(median_afd,4))+'\t'+str(round(median_Dxy,4))+'\t'+str(round(median_Fst,4))+'\t'+str(round(median_Fst_4C,4))+'\t'+str(round(median_DD,4))+'\t'+str(round(median_win,0))+'\n'+#str(round(median_tajd1,4))+'\t'+str(round(median_tajd2,0))+'\t'+str(round(median_faiwu1,4))+'\t'+str(round(median_faiwu2,0))+'\n'+
+                                     'sd\t'+str(round(sd_abs,4))+'\t'+str(round(sd_afd,4))+'\t'+str(round(sd_Dxy,4))+'\t'+str(round(sd_Fst,4))+'\t'+str(round(sd_Fst_4C,4))+'\t'+str(round(sd_DD,4))+'\t'+str(round(sd_win,0))+'\n'+#str(round(sd_tajd1,4))+'\t'+str(round(sd_tajd2,0))+'\t'+str(round(sd_faiwu1,4))+'\t'+str(round(sd_faiwu2,0))+'\n'+
+                                     'CV\t'+str(round(CV_abs,4))+'\t'+str(round(CV_afd,4))+'\t'+str(round(CV_Dxy,4))+'\t'+str(round(CV_Fst,4))+'\t'+str(round(CV_Fst_4C,4))+'\t'+str(round(CV_DD,4))+'\t'+str(round(CV_win,0))+'\n'+#str(round(CV_tajd1,4))+'\t'+str(round(CV_tajd2,0))+'\t'+str(round(CV_faiwu1,4))+'\t'+str(round(CV_faiwu2,0))+'\n'+
+                                     'max\t'+str(round(max(absafd),4))+'\t'+str(round(max(afd_c1_c2),4))+'\t'+str(round(max(dxy),4))+'\t'+str(round(max(fst),4))+'\t'+str(round(max(fst_4C),4))+'\t'+str(round(max(dd),4))+'\t'+str(round(max(wlength),0))+'\n'+#str(round(max(tajD_c1),4))+'\t'+str(round(max(tajD_c2),0))+'\t'+str(round(max(faiwuH_c1),4))+'\t'+str(round(max(faiwuH_c2),0))+'\n'+
+                                     'Cutoff\t'+str(round(out_abs_up,4))+'\t'+str(round(out_afd_up,4))+'\t'+str(round(out_dxy,4))+'\t'+str(round(out_fst,4))+'\t'+str(round(out_fst_4C,4))+'\t'+str(round(out_dd,4))+'\t'+str(round(out_win,0))+'\n'+#str(round(out_tajd1,4))+'\t'+str(round(out_tajd2,0))+'\t'+str(round(out_faiwu1,4))+'\t'+str(round(out_faiwu2,0))+'\n'+
+                                     'Cutoff2\t'+str(round(out_abs_low,4))+'\t'+str(round(out_afd_low,4))+'\t'+str(round(out_dxy,4))+'\t'+str(round(out_fst,4))+'\t'+str(round(out_fst_4C,4))+'\t'+str(round(out_dd,4))+'\t'+str(round(out_win,0))+'\n')#+str(round(out_tajd1,4))+'\t'+str(round(out_tajd2,0))+'\t'+str(round(out_faiwu1,4))+'\t'+str(round(out_faiwu2,0))+'\n')
 
 
                 # use pandas to read infiles as dataframe and select outlier combinations

@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description='Part 2 of divergence scan pipeline
                                  'within the given interval (-win) using the annotation gff file. In the second step '+
                                  'it greps the gene functions from the ortholog gene function list.')
 
-parser.add_argument('-i', type=str, metavar='inputdir_path', required=True, help='REQUIRED: Full or relative path to directory conataining the contrast directory (as in step DS1)')
+parser.add_argument('-i', type=str, metavar='inputdir_path', required=True, help='REQUIRED: Full or relative path to directory containing the contrast directory (as in step DS1)')
 parser.add_argument('-coh1', type=str, metavar='cohort_1', required=True, help='REQUIRED: Name of first cohort')
 parser.add_argument('-coh2', type=str, metavar='cohort_2', required=True, help='REQUIRED: Name of second cohort')
 parser.add_argument('-an', type=str, metavar='gff_annotation_file', default='Data/annotations/LyV2.gff', help='Full path to annotation gff file [Data/annotations/LyV2.gff]')
@@ -102,7 +102,7 @@ os.remove(outputdir+'sed.unix')
 
 ###### STEP 3 ######
 # create interval list file in bed format for candidate genes
-print('\nStep 3: Create interval bedfiles for candidate genes, including 2kb upstream\n')
+print('\nStep 3: Create interval bedfiles for candidate genes\n')
 inlist = []
 for dirName, subdirList, fileList in os.walk(outputdir):
     for file in fileList:
@@ -123,11 +123,11 @@ for file in inlist_sorted:
             datgen = data[8].split(sep=';')
             genename = datgen[0].split(sep='=')
             if data[6] == str('+'):
-                bedstart = int(data[3]) - 2001 # 2kb upstream and -1 for the bedformat
+                bedstart = int(data[3])
                 bedend = int(data[4])
             else:
                 bedstart = int(data[3]) - 1
-                bedend = int(data[4]) + 2000 # 2kb upstream on the '-' strand
+                bedend = int(data[4])
             outfile.write(data[0]+'\t'+str(bedstart)+'\t'+str(bedend)+'\t'+genename[1]+'\n')
     infile.close()
     outfile.close()
@@ -159,7 +159,7 @@ for file in a_sorted:
     query = pd.read_table(outputdir+file)
     test = pd.read_table(args.gf)
     # merge tables as left join (left=AL_ID gene list)
-    inner = query.merge(test, how='left')
+    inner = pd.merge(test, query, how='left')
     # add contrast column
     inner['contrast'] = contrast
     inner.to_csv(outputdir+basename+args.suf+'_GF.txt', sep='\t', index=False)

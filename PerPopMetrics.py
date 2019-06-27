@@ -48,18 +48,18 @@ else:
 #     print('\n\tCreated directory '+outputdir)
 
 # which input populations?
-AFs = []
+ACs = []
 for dirName, subdirList, fileList in os.walk(args.i):
     for file in fileList:
         if file.endswith('_raw.table') == True:
-            AFs.append(dirName+'/'+file)
+            ACs.append(dirName+'/'+file)
 
 pops = []
-for i in range(len(AFs)):
-    tin = AFs[i].split(sep='/')
+for i in range(len(ACs)):
+    tin = ACs[i].split(sep='/')
     inname = tin[len(tin)-1].split(sep='_')[0]
     pops.append(inname)
-lastpop = pops[len(AFs)-1]
+lastpop = pops[len(ACs)-1]
 
 ###### EXECUTION ######
 if __name__ == '__main__':
