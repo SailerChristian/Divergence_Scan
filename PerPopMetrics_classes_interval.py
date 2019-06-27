@@ -11,8 +11,6 @@ from natsort import natsorted
 import pandas as pd
 import numpy as np
 from scipy import stats
-# import matplotlib.pyplot as plt
-# from matplotlib.backends.backend_pdf import PdfPages
 
 
 ## create Class 
@@ -333,7 +331,7 @@ class Ginterval():
 			temp_b2 = (2*((AN*AN)+AN+3))/(9*AN*(AN-1))
 			# c1 & c2
 			temp_c1 = temp_b1-(1/sum_rec_1)
-			temp_c2 = temp_b2-(AN-2)/(sum_rec_1*AN)+sum_rec_2/(sum_rec_1*sum_rec_1)
+			temp_c2 = temp_b2-(AN+2)/(sum_rec_1*AN)+sum_rec_2/(sum_rec_1*sum_rec_1)
 		# calculate the means per window
 		wstart = min(pos)
 		wend = max(pos)
