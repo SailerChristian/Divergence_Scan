@@ -58,7 +58,8 @@ class G1():
             print('Processing '+incoh1[i])
             pastecmd = open('paste_'+args.coh1+'_'+args.coh2+'.unix', 'w')
             pastecmd.write('paste ')
-            pastecmd.write(incoh1[i]+' '+incoh2[i]+' | cut -f -5,8,9,10 ')
+            # pastecmd.write(incoh1[i]+' '+incoh2[i]+' | cut -f -5,8,9,10 ')
+            pastecmd.write(incoh1[i]+' '+incoh2[i]+' | cut -f -4,7,8 ')
             pastecmd.write('> '+outputdir+'/'+contrast+'_scaf_'+str(i+1)+'_temp.table')
             pastecmd.close()
 
@@ -102,7 +103,8 @@ class G1():
                 tANmax_1 = []
                 tANmax_2 = []
                 for line in infile:
-                    scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                    # scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                    scaffold, position, AC_1, AN_1, AC_2, AN_2 = line.split()
                     tANmax_1.append(int(AN_1))
                     tANmax_2.append(int(AN_2))
                 ANmax_1 = max(tANmax_1)
@@ -124,7 +126,8 @@ class G1():
                     non_variant_count = 0
 
                     for line in infile:
-                        scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                        # scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                        scaffold, position, AC_1, AN_1, AC_2, AN_2 = line.split()
                         if int(AN_1)>=int(round((1-args.per)*ANmax_1,0)) and int(AN_2)>=int(round((1-args.per)*ANmax_2,0)):
                             total_allele_count = int(AC_1)+int(AC_2)
                             total_alleles_sampled = int(AN_1)+int(AN_2)
@@ -178,7 +181,8 @@ class G1():
                     outfile.write('CHROM\tPOS\tAC1\tAN1\tAC2\tAN2\n')
 
                     for line in infile:
-                        scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                        # scaffold, position, AC_1, AN_1, DP_1, AC_2, AN_2, DP_2 = line.split()
+                        scaffold, position, AC_1, AN_1, AC_2, AN_2 = line.split()
                         outfile.write(scaffold+'\t'+position+'\t'+AC_1+'\t'+AN_1+'\t'+AC_2+'\t'+AN_2+'\n')
                     os.remove(outputdir+'/'+contrast+'_scaf_'+str(i+1)+'.tab') # removes output files of part 2, as they are no longer needed
         outfile.close()

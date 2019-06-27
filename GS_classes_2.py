@@ -116,8 +116,8 @@ class G2():
 				bedcmd = open(outputdir+'bed_intersect.unix', 'w')
 				bedcmd.write('bedtools intersect -a '+args.i+'genes/'+file+' -b '+outputdir+table+' -wb | ')
 				bedcmd.write(""" awk '{$1=$2=$3""; print $4,$5,$6,$7,$8,$9,$10,$11}' """)
-				bedcmd.write('| ')
-				bedcmd.write(""" sed -n -e 's/^.*;Parent=//p' """)
+				# bedcmd.write('| ')
+				# bedcmd.write(""" sed -n -e 's/^.*;Name=//p' """)
 				bedcmd.write('| sort > '+outputdir+basename+'_refined_AC'+args.suf+'.table') # sort list 
 				bedcmd.close()
 
@@ -129,14 +129,23 @@ class G2():
 				print(file+' subsetted to '+basename+'_refined_AC'+args.suf+'.table')
 				logfile.write(file+' subsetted to '+basename+'_refined_AC'+args.suf+'.table\n')
 
-				# Obtain gene start, end, length, name from interval bedfile of GS2
+				# # Obtain gene start, end, length, name from interval bedfile of GS2; set up for Arabidopsis lyrate gff file
+				# bedgene = open(outputdir+'bed_gene.unix', 'w')
+				# bedgene.write(""" sed -n -e 's/.t.*;Parent=.*//p' """)
+				# bedgene.write(args.i+'genes/'+file+' | sort -u -k 4 | ') # -u sorts uniqu per row, -k4 uses the 4th column to sort
+				# bedgene.write(""" sed 's/ID=//g' """ '| ')
+				# bedgene.write(""" awk '{FS="\t"; OFS="\t"; print $4, $1, $2, $3, $3-$2}' """)
+				# bedgene.write('> '+outputdir+'/temp_'+basename+'_gene_interval.txt')
+				# bedgene.close()
+
+				# for Arabidopsis halleri CH_v2 annotation
 				bedgene = open(outputdir+'bed_gene.unix', 'w')
-				bedgene.write(""" sed -n -e 's/.t.*;Parent=.*//p' """)
-				bedgene.write(args.i+'genes/'+file+' | sort -u -k 4 | ') # -u sorts uniqu per row, -k4 uses the 4th column to sort
-				bedgene.write(""" sed 's/ID=//g' """ '| ')
 				bedgene.write(""" awk '{FS="\t"; OFS="\t"; print $4, $1, $2, $3, $3-$2}' """)
+				bedgene.write(args.i+'genes/'+file+' | sort -u -k 1 ') # -u sorts uniqu per row, -k4 uses the 4th column to sort
 				bedgene.write('> '+outputdir+'/temp_'+basename+'_gene_interval.txt')
 				bedgene.close()
+
+
 
 				# execute in unix
 				cmd = open(outputdir+'bed_gene.unix', 'r')
@@ -214,12 +223,17 @@ class G2():
 			for k in range((int(AN_2)-1)):
 				temp2.append(1/(k+1))
 			sum_rec_2 = sum(temp2)
-			ht = 2*allele_freq*(1-allele_freq)
-			h1 = 2*allele_c1_freq*(1-allele_c1_freq)
-			h2 = 2*allele_c2_freq*(1-allele_c2_freq)
-			h12 = ((h1*int(AN_1))+(h2*int(AN_2)))/(int(AN_1)+int(AN_2))
-			allele_fst = abs(ht-h12)/ht
-			fst.append(allele_fst)
+
+			try:
+				ht = 2*allele_freq*(1-allele_freq)
+				h1 = 2*allele_c1_freq*(1-allele_c1_freq)
+				h2 = 2*allele_c2_freq*(1-allele_c2_freq)
+				h12 = ((h1*int(AN_1))+(h2*int(AN_2)))/(int(AN_1)+int(AN_2))
+				allele_fst = abs(ht-h12)/ht
+				fst.append(allele_fst)
+			except ZeroDivisionError:
+				fst.append(0)
+
 			dxy.append((allele_c1_freq*(1-allele_c2_freq))+(allele_c2_freq*(1-allele_c1_freq)))
 			varu1 = (1/(int(AN_1)*int(AN_1)))*allele_c1_freq*(1-allele_c1_freq)
 			varu2 = (1/(int(AN_2)*int(AN_2)))*allele_c2_freq*(1-allele_c2_freq)
@@ -502,11 +516,11 @@ class G2():
 			snp_file['tajimas_D_'+args.coh1] = delta1/statistics.stdev(delta1)
 			snp_file['tajimas_D_'+args.coh2] = delta2/statistics.stdev(delta2)
 
-		# calculate Fai and Wu's H
-			delta1 = snp_file[args.coh1+'_pi']-snp_file[args.coh1+'_thetah']
-			delta2 = snp_file[args.coh2+'_pi']-snp_file[args.coh2+'_thetah']
-			snp_file['faiwus_H_'+args.coh1] = delta1/statistics.stdev(delta1)
-			snp_file['faiwus_H_'+args.coh2] = delta2/statistics.stdev(delta2)
+		# # calculate Fai and Wu's H
+		# 	delta1 = snp_file[args.coh1+'_pi']-snp_file[args.coh1+'_thetah']
+		# 	delta2 = snp_file[args.coh2+'_pi']-snp_file[args.coh2+'_thetah']
+		# 	snp_file['faiwus_H_'+args.coh1] = delta1/statistics.stdev(delta1)
+		# 	snp_file['faiwus_H_'+args.coh2] = delta2/statistics.stdev(delta2)
 
 			snp_file.to_csv(outputdir+contrast+'_WG_metrics_'+str(args.snps)+'SNPs_'+str(int(10000*args.cut))+'ppm_'+str(int(args.ovlp))+'ol'+args.suf+'.txt',sep="\t", index=False)
 			   
@@ -514,7 +528,7 @@ class G2():
 		   
 		print('Processed '+str(count)+' files for DDresiduals')
 		print('Processed '+str(count)+' files for Tajimas D')
-		print('Processed '+str(count)+' files for Fai and Wus H\n')
+		# print('Processed '+str(count)+' files for Fai and Wus H\n')
 		# Remove files that are no longer necessary
 		os.remove(outputdir+contrast+'_temp_gene_metrics_'+baseparname+args.suf+'.txt')
 		os.remove(outputdir+contrast+'_gene_metrics_'+baseparname+args.suf+'.txt')

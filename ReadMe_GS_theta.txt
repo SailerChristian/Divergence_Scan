@@ -1,4 +1,4 @@
-### GENOME SCAN PIPELINE YANT LAB 2016 ###
+##### GENOME SCAN PIPELINE YANT LAB 2016 ###
 ### individual scripts written by Jeff DaCosta (parts 1-4) streamlined and extended by Christian Sailer 
 ### 9 January 2017
 ### updated 7 March 2018
